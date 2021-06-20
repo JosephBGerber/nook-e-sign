@@ -1,6 +1,7 @@
 use actix_web::{ResponseError, HttpResponse};
 use actix_web::http::StatusCode;
 use serde::Serialize;
+use log::error;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -49,14 +50,17 @@ struct ErrorResponse {
     message: String,
 }
 
-pub fn map_sqlx_error(_: sqlx::Error) -> Error {
+pub fn map_sqlx_error(e: sqlx::Error) -> Error {
+    error!("{:?}", e);
     Error::Unknown
 }
 
-pub fn map_multipart_error(_: actix_multipart::MultipartError) -> Error {
+pub fn map_multipart_error(e: actix_multipart::MultipartError) -> Error {
+    error!("{:?}", e);
     Error::BadRequest
 }
 
-pub fn map_image_error(_: image::ImageError) -> Error {
+pub fn map_image_error(e: image::ImageError) -> Error {
+    error!("{:?}", e);
     Error::BadRequest
 }

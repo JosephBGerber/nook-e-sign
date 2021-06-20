@@ -26,6 +26,11 @@ RUN cd /opt && \
     unzip gradle*.zip && \
     rm gradle*.zip
 
+RUN cd /opt && \
+    wget https://download.java.net/openjdk/jdk7u75/ri/jdk_ri-7u75-b13-linux-x64-18_dec_2014.tar.gz && \
+    tar -xvf jdk*.tar.gz && \
+    rm jdk*.tar.gz
+
 # download and install Android SDK
 # https://developer.android.com/studio#command-tools
 ARG ANDROID_SDK_VERSION=6858069

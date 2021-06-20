@@ -5,6 +5,7 @@
     android:versionName="1.0rd">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <permission android:name="android.permission.REBOOT"/>
 
     <application
         android:allowBackup="true"
@@ -17,9 +18,7 @@
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>

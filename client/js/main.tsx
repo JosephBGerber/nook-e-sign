@@ -22,6 +22,7 @@ const initialModel = {
 
 type Msg
     = { type: "SELECT_DEVICE", id: number }
+    | { type: "DELETE_DEVICE", id: number }
     | { type: "DESELECT_DEVICE" }
     | { type: "GET_DEVICES", devices: Device[] }
 
@@ -34,6 +35,18 @@ function reducer(model: Model, msg: Msg): Model {
                 return {
                     ...model,
                     selected_device: selected ? msg.id : null
+                }
+            } else {
+                return model
+            }
+        case "DELETE_DEVICE":
+            if (model.devices) {
+                const devices = model.devices.filter((device) => device.id == msg.id)
+
+                return {
+                    ...model,
+                    devices: devices,
+                    selected_device: model.selected_device == msg.id ? null : model.selected_device
                 }
             } else {
                 return model
@@ -106,20 +119,38 @@ const Devices: React.FC<{ dispatch: React.Dispatch<Msg>, devices: Device[] }> = 
 }
 
 const Row: React.FC<{ dispatch: React.Dispatch<Msg>, id: number, charge: number }> = ({dispatch, id, charge}) => {
-    function onClick(event: React.MouseEvent) {
+    function onClickEdit(event: React.MouseEvent) {
         dispatch({type: "SELECT_DEVICE", id: id})
     }
+
+    function onClickDelete(event: React.MouseEvent) {
+        fetch(`device/${id}`, {
+            method: "DELETE"
+        })
+            .then(res => res.json())
+            .then(
+                (result: number) => {
+                    dispatch({type: "DELETE_DEVICE", id: id})
+                }
+            )
+    }
+
 
     return <tr>
         <td>{id}</td>
         <td>{charge}</td>
         <td>
-            <button onClick={onClick}>Edit</button>
+            <button onClick={onClickEdit}>Edit</button>
+            <button onClick={onClickDelete}>Delete</button>
         </td>
     </tr>;
 }
 
-const ImageView: React.FC<{ dispatch: React.Dispatch<Msg>, id: number, image_hash: string }> = ({dispatch, id, image_hash}) => {
+const ImageView: React.FC<{ dispatch: React.Dispatch<Msg>, id: number, image_hash: string }> = ({
+                                                                                                    dispatch,
+                                                                                                    id,
+                                                                                                    image_hash
+                                                                                                }) => {
     const [angle, setAngle] = useState(0);
 
     function onClick(event: React.MouseEvent) {
