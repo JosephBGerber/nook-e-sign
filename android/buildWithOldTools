@@ -1,0 +1,31 @@
+
+BUILD_TOOLS="/home/joseph/android-sdks/build-tools/19.1.0"
+PLATFORM="/home/joseph/android-sdks/platforms/android-7"
+
+KEYSTORE="/home/joseph/android-keystore.jks"
+
+PROJECT_ROOT="/home/joseph/AndroidStudioProjects/NookTouchSign"
+APP_DIR="$PROJECT_ROOT/app"
+SRC_DIR="$APP_DIR/src/main"
+
+BUILD_DIR="$APP_DIR/build"
+
+
+./gradlew compileDebugSources
+
+mkdir -p $BUILD_DIR
+cd $BUILD_DIR || exit
+
+$BUILD_TOOLS/aapt package -m -J $BUILD_DIR -M $SRC_DIR/AndroidManifest.xml -S $SRC_DIR/res/ -I $PLATFORM/android.jar
+
+$BUILD_TOOLS/dx --dex --output=classes.dex intermediates/javac/debug/classes
+
+$BUILD_TOOLS/aapt package -f -M $SRC_DIR/AndroidManifest.xml -S $SRC_DIR/res/ -I $PLATFORM/android.jar -F NookTouchSign.apk.unaligned
+
+$BUILD_TOOLS/aapt add -f NookTouchSign.apk.unaligned classes.dex
+
+jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -storepass "\$3ADE68b1\$" -keystore $KEYSTORE NookTouchSign.apk.unaligned key0
+
+rm -f NookTouchSign.apk
+
+$BUILD_TOOLS/zipalign 4 NookTouchSign.apk.unaligned  NookTouchSign.apk

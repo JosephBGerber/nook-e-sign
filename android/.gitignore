@@ -1,0 +1,10 @@
+.gradle
+build
+debug
+local.properties
+
+bin
+gen
+
+.idea
+.DS_Store

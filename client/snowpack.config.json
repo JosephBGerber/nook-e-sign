@@ -1,0 +1,15 @@
+{
+  "mount": {
+    "html": "/",
+    "js": "/js"
+  },
+  "devOptions": {
+    "open": "none"
+  },
+  "buildOptions": {
+    "sourcemap": true
+  },
+  "// devOptions": [
+    "Switch off automatic opening of browser tabs"
+  ]
+}
