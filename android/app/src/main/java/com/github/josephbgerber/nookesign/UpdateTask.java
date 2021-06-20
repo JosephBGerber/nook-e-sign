@@ -70,6 +70,8 @@ public class UpdateTask {
 
             String endpoint = "http://192.168.1.10:8080/device/" + id;
 
+            System.out.println(endpoint);
+
             URL url = new URL(endpoint);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestProperty("Accept-Charset", charset);

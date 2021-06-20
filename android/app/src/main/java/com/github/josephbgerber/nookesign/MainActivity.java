@@ -6,6 +6,12 @@ import android.os.Bundle;
 import android.view.KeyEvent;
 import android.widget.ImageView;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 
 public class MainActivity extends Activity {
 
@@ -13,6 +19,22 @@ public class MainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        try {
+            Process process = Runtime.getRuntime().exec("su");
+            DataOutputStream out = new DataOutputStream(process.getOutputStream());
+
+            // Disable all inputs on this device
+            out.writeBytes("rm /dev/input/event0\n");
+            out.writeBytes("rm /dev/input/event1\n");
+            out.writeBytes("rm /dev/input/event2\n");
+            out.flush();
+            out.close();
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+
 
         Resources res = getResources();
 
