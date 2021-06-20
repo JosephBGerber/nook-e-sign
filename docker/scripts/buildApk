@@ -1,31 +1,40 @@
+#!/bin/bash
+
+# Modern build tools cannot be used to build this project because the Nook uses a version of android for 2012.
+# Running this script in the context of the development docker container, then the NookTouchSign.apk file will be build.
+# This file can be found under android/build.
+
 BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/19.1.0"
 PLATFORM="$ANDROID_SDK_ROOT/platforms/android-7"
 
 ANDROID_ROOT="$WORKSPACE/android"
-APP_DIR="$ANDROID_ROOT/app"
-SRC_DIR="$APP_DIR/src/main"
+SRC_DIR="$ANDROID_ROOT/src/main"
 JAVA_DIR="$SRC_DIR/java"
-BUILD_DIR="$APP_DIR/build"
+BUILD_DIR="$ANDROID_ROOT/build"
 
-mkdir -p $BUILD_DIR
-cd $BUILD_DIR
+mkdir -p "$BUILD_DIR"
+cd "$BUILD_DIR" || return
 
-$BUILD_TOOLS/aapt package -m -J $JAVA_DIR -M $SRC_DIR/AndroidManifest.xml -S $SRC_DIR/res/ -I $PLATFORM/android.jar
+mkdir "$BUILD_DIR/src"
+
+"$BUILD_TOOLS/aapt" package -m -J "$BUILD_DIR/src" -M "$SRC_DIR/AndroidManifest.xml" -S "$SRC_DIR/res/" -I "$PLATFORM/android.jar" || return
 
 rm -r obj
 mkdir obj
 
-javac -d obj -source 1.7 -target 1.7 -classpath "$JAVA_DIR" -bootclasspath $PLATFORM/android.jar $JAVA_DIR/com/github/josephbgerber/nookesign/*.java
-javac -d obj -source 1.7 -target 1.7 -classpath "$JAVA_DIR" -bootclasspath $PLATFORM/android.jar $JAVA_DIR/mjson/*.java
+find "$JAVA_DIR" -name "*.java" -exec javac -d obj -source 1.7 -target 1.7 -classpath "$JAVA_DIR:$BUILD_DIR/src" -bootclasspath "$PLATFORM/android.jar" {} \; || return
+find "$BUILD_DIR/src" -name "*.java" -exec javac -d obj -source 1.7 -target 1.7 -classpath "$JAVA_DIR:$BUILD_DIR/src" -bootclasspath "$PLATFORM/android.jar" {} \; || return
 
-$BUILD_TOOLS/dx --dex --output=classes.dex obj
+"$BUILD_TOOLS/dx" --dex --output=classes.dex obj || return
 
-$BUILD_TOOLS/aapt package -f -M $SRC_DIR/AndroidManifest.xml -S $SRC_DIR/res/ -I $PLATFORM/android.jar -F NookTouchSign.apk.unaligned
+"$BUILD_TOOLS/aapt" package -f -M "$SRC_DIR/AndroidManifest.xml" -S "$SRC_DIR/res/" -I "$PLATFORM/android.jar" -F NookTouchSign.apk.unaligned || return
 
-$BUILD_TOOLS/aapt add -f NookTouchSign.apk.unaligned classes.dex
+"$BUILD_TOOLS/aapt" add -f NookTouchSign.apk.unaligned classes.dex || return
 
-jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -storepass "\$3ADE68b1\$" -keystore $KEYSTORE NookTouchSign.apk.unaligned key0
+jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -storepass "\$3ADE68b1\$" -keystore "$KEYSTORE" NookTouchSign.apk.unaligned key0 || return
 
 rm -f NookTouchSign.apk
 
-$BUILD_TOOLS/zipalign 4 NookTouchSign.apk.unaligned NookTouchSign.apk
+"$BUILD_TOOLS/zipalign" 4 NookTouchSign.apk.unaligned NookTouchSign.apk || return
+
+echo "Successfully built apk!"
