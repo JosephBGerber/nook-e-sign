@@ -64,3 +64,8 @@ pub fn map_image_error(e: image::ImageError) -> Error {
     error!("{:?}", e);
     Error::BadRequest
 }
+
+pub fn map_session_error(e: actix_web::Error) -> Error {
+    error!("{:?}", e);
+    Error::Unknown
+}
