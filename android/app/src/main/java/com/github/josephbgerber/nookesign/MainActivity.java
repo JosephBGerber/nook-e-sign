@@ -213,7 +213,7 @@ public class MainActivity extends Activity {
     }
 
     Handler handler = new Handler();
-    private final static int INTERVAL = 5000; // 5 seconds 1000 * 60 * 5; // 5 minutes
+    private final static int INTERVAL = 1000 * 60 * 5; // 5 minutes
 
     void startUpdateTask() {
         updateTask.run();
