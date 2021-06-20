@@ -10,7 +10,7 @@ buildApk || { echo "Failed to build apk."; exit -1; }
 
 cd $INSTALLER_ROOT
 mkdir -p workdir || { echo "Failed to create a working directory."; exit -1; }
-cp NookSignBase.img NookSign.img
+sudo cp NookSignBase.img NookSign.img
 sudo mount -o loop,rw,offset=16384 NookSign.img workdir || { echo "Failed to mount image."; exit -1; }
 sudo cp $BUILD_DIR/NookTouchSign.apk workdir/custom/files/com.github.josephbgerber.nookesign.apk
 sudo umount workdir

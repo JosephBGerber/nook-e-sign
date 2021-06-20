@@ -1,0 +1,25 @@
+.mainContainer {
+    display: flex;
+    justify-content: center;
+}
+
+.mainColumn {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    min-width: 850px;
+}
+
+
+.imageView {
+    align-items: center;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+
+}
+
+.imageView__buttons {
+    display: flex;
+}

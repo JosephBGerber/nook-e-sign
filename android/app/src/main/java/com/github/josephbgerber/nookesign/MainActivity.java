@@ -21,7 +21,6 @@ import android.widget.TextView;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -45,74 +44,42 @@ public class MainActivity extends Activity {
 
         final SharedPreferences preferences = getPreferences(Context.MODE_PRIVATE);
 
-        int libraryId = preferences.getInt("libraryId", -1);
-        final int deviceId = preferences.getInt("deviceId", -1);
         final String hostname = preferences.getString("hostname", null);
+        final String libraryName = preferences.getString("libraryName", null);
+        final int libraryId = preferences.getInt("libraryId", -1);
+        final int deviceId = preferences.getInt("deviceId", -1);
         final boolean disableAllInput = preferences.getBoolean("disableAllInput", false);
 
-        if (libraryId != -1 && deviceId != -1 && hostname != null) {
-            try {
-                URL url = new URL("http://" + hostname);
-
-                HttpURLConnection connection = (HttpURLConnection) (new URL(url, "device/" + deviceId).openConnection());
-                connection.setRequestProperty("Accept-Charset", "UTF-8");
-
-                int responseCode = connection.getResponseCode();
-
-                if (responseCode == 403) {
-                    // This device is not in the database. It may have been deleted. De-initialize this device.
-                    SharedPreferences.Editor editor = preferences.edit();
-                    editor.putInt("libraryId", -1);
-                    editor.putInt("deviceId", -1);
-                    editor.putString("hostname", null);
-                    editor.putBoolean("disableAllInput", false);
-                    editor.commit();
-                }
-                if (responseCode == 200) {
-                    Json device = Json.read(readIntoString(connection.getInputStream()));
-                    connection.disconnect();
-
-                    if (device.isNull()) {
-                        // This device is not in the database. It may have been deleted. De-initialize this device.
-                        SharedPreferences.Editor editor = preferences.edit();
-                        editor.putInt("libraryId", -1);
-                        editor.putInt("deviceId", -1);
-                        editor.putString("hostname", null);
-                        editor.putBoolean("disableAllInput", false);
-                        editor.commit();
-                    } else {
-                        setContentView(R.layout.activity_image);
-                        if (disableAllInput) {
-                            disableAllInput();
-                        }
-                        startUpdateTask();
-                        return;
-                    }
-                }
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        // This device is uninitialized. Ask the user for the necessary information to connect to the server.
         final TextView errors = (TextView) findViewById(R.id.errors);
         final EditText editHostname = (EditText) findViewById(R.id.editHostname);
-        final EditText editLibraryId = (EditText) findViewById(R.id.editLibraryId);
+        final EditText editLibraryName = (EditText) findViewById(R.id.editLibraryName);
         final CheckBox disableAllInputCheckbox = (CheckBox) findViewById(R.id.disable_all_input);
 
-        System.out.println(editHostname == null);
+        if (hostname != null && libraryName != null) {
+            editHostname.setText(hostname);
+            editLibraryName.setText(libraryName);
+            disableAllInputCheckbox.setChecked(disableAllInput);
+        }
 
         final Button button = (Button) findViewById(R.id.button);
-        System.out.println(button == null);
 
         View.OnClickListener listener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
+                String newHostname = editHostname.getText().toString();
+
+                String newLibraryName = editLibraryName.getText()
+                        .toString()
+                        .trim()
+                        .toLowerCase()
+                        .replace(' ', '-');
+
+                boolean newDisableAllInput = disableAllInputCheckbox.isChecked();
+
                 URL url;
                 try {
-                    url = new URL("http://" + editHostname.getText());
+                    url = new URL("http://" + newHostname);
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                     errors.setText(R.string.error_invalid_hostname);
@@ -120,16 +87,10 @@ public class MainActivity extends Activity {
                     return;
                 }
 
-                String libraryName = editLibraryId.getText()
-                        .toString()
-                        .trim()
-                        .toLowerCase()
-                        .replace(' ', '-');
-
                 Json library;
 
                 try {
-                    HttpURLConnection connection = (HttpURLConnection) (new URL(url, "library/findByName/" + libraryName).openConnection());
+                    HttpURLConnection connection = (HttpURLConnection) (new URL(url, "library/findByName/" + newLibraryName).openConnection());
                     connection.setRequestProperty("Accept-Charset", "UTF-8");
 
                     int responseCode = connection.getResponseCode();
@@ -156,52 +117,59 @@ public class MainActivity extends Activity {
                     return;
                 }
 
-                Json device;
+                if (newLibraryName.equals(libraryName) && libraryId == library.at("id").asInteger() && deviceId != -1) {
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putString("hostname", newHostname);
+                    editor.putBoolean("disableAllInput", newDisableAllInput);
+                    editor.commit();
+                } else {
+                    Json device;
 
-                try {
-                    HttpURLConnection connection = (HttpURLConnection) (new URL(url, "library/" + library.at("id").asInteger() + "/device").openConnection());
-                    connection.setRequestMethod("POST");
-                    connection.getResponseCode();
-                    device = Json.read(readIntoString(connection.getInputStream()));
-                    connection.disconnect();
+                    try {
+                        HttpURLConnection connection = (HttpURLConnection) (new URL(url, "library/" + library.at("id").asInteger() + "/device").openConnection());
+                        connection.setRequestMethod("POST");
+                        connection.getResponseCode();
+                        device = Json.read(readIntoString(connection.getInputStream()));
+                        connection.disconnect();
 
-                    int responseCode = connection.getResponseCode();
+                        int responseCode = connection.getResponseCode();
 
-                    if (responseCode != 200) {
+                        if (responseCode != 200) {
+                            errors.setText(R.string.error_failed_to_initialize_new_device);
+                            errors.setVisibility(View.VISIBLE);
+                            return;
+
+                        }
+
+                    } catch (IOException e) {
                         errors.setText(R.string.error_failed_to_initialize_new_device);
                         errors.setVisibility(View.VISIBLE);
                         return;
-
                     }
 
-                } catch (IOException e) {
-                    errors.setText(R.string.error_failed_to_initialize_new_device);
-                    errors.setVisibility(View.VISIBLE);
-                    return;
+                    if (device == null || device.isNull()) {
+                        errors.setText(R.string.error_failed_to_initialize_new_device);
+                        errors.setVisibility(View.VISIBLE);
+                        return;
+                    }
+
+                    SharedPreferences.Editor editor = preferences.edit();
+
+                    editor.putString("hostname", newHostname);
+                    editor.putString("libraryName", newLibraryName);
+                    editor.putInt("libraryId", library.at("id").asInteger());
+                    editor.putBoolean("disableAllInput", newDisableAllInput);
+                    editor.putInt("deviceId", device.at("id").asInteger());
+                    editor.commit();
                 }
 
-                if (device == null || device.isNull()) {
-                    errors.setText(R.string.error_failed_to_initialize_new_device);
-                    errors.setVisibility(View.VISIBLE);
-                    return;
+                if (newDisableAllInput) {
+                    disableAllInput();
                 }
-
-                // This device has been successfully initialized. Save the necessary preferences and restart this activity.
-                SharedPreferences.Editor editor = preferences.edit();
-
-                editor.putInt("libraryId", library.at("id").asInteger());
-                editor.putInt("deviceId", device.at("id").asInteger());
-                editor.putString("hostname", editHostname.getText().toString());
-                editor.putBoolean("disableAllInput", disableAllInputCheckbox.isChecked());
-                editor.commit();
-
-                Intent intent = getIntent();
-                finish();
-                startActivity(intent);
+                setContentView(R.layout.activity_image);
+                startUpdateTask();
             }
         };
-
-        System.out.println(listener == null);
 
         button.setOnClickListener(listener);
     }
@@ -235,10 +203,12 @@ public class MainActivity extends Activity {
         try {
             SharedPreferences preferences = getPreferences(Context.MODE_PRIVATE);
 
-            int libraryId = preferences.getInt("libraryId", -1);
-            int deviceId = preferences.getInt("deviceId", -1);
             String hostname = preferences.getString("hostname", null);
+            int libraryId = preferences.getInt("libraryId", -1);
+
             boolean disableAllInput = preferences.getBoolean("disabledAllInput", false);
+
+            int deviceId = preferences.getInt("deviceId", -1);
 
             if (libraryId == -1 || deviceId == -1 || hostname == null) {
                 throw new AssertionError("Update task started but device has not been properly configured.");
@@ -264,9 +234,7 @@ public class MainActivity extends Activity {
 
                 // This device has become uninitialized.
                 SharedPreferences.Editor editor = preferences.edit();
-                editor.putInt("libraryId", -1);
                 editor.putInt("deviceId", -1);
-                editor.putString("hostname", null);
                 editor.putBoolean("disableAllInput", false);
                 editor.commit();
                 stopUpdateTask();

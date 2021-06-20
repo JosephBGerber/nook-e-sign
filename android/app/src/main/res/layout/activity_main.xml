@@ -27,10 +27,10 @@
     <TextView
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="@string/edit_library_id" />
+        android:text="@string/edit_library_name" />
 
     <EditText
-        android:id="@+id/editLibraryId"
+        android:id="@+id/editLibraryName"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:inputType="text" />

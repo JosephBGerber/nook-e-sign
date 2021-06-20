@@ -2,7 +2,7 @@
     <string name="app_name">Nook Touch Sign</string>
     <string name="title_activity_main">Nook E-Sign</string>
     <string name="edit_hostname">Edit Hostname</string>
-    <string name="edit_library_id">Edit Library Id</string>
+    <string name="edit_library_name">Edit Library Name</string>
     <string name="attempt_to_connect">Attempt to Connect</string>
     <string name="disable_all_input">Disable all input when enabled?</string>
     <string name="error_invalid_hostname">Invalid hostname provided. Failed to connect to server.</string>

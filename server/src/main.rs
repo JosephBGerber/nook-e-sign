@@ -6,6 +6,7 @@ use error::*;
 
 use actix_files::Files;
 use actix_web::{get, post, delete, web, App, HttpServer, Responder, HttpResponse};
+use actix_web::FromRequest;
 use dotenv::dotenv;
 use futures::stream::StreamExt;
 use image;
@@ -121,27 +122,27 @@ async fn post_image(pool: web::Data<PgPool>, web::Path(id): web::Path<i32>, mut 
                 .to_string();
 
             if name == "image" {
-                let content = field.next().await;
+                let mut content = Vec::new();
 
-                if let Some(content) = content {
-                    let content = content.map_err(map_multipart_error)?;
-
-                    let img = image::load_from_memory(&content)
-                        .map_err(map_image_error)?;
-                    img.resize_exact(600, 800, FilterType::Lanczos3);
-                    let mut bytes = Vec::new();
-                    img.write_to(&mut bytes, ImageOutputFormat::Jpeg(32))
-                        .map_err(map_image_error)?;
-
-                    sqlx::query("UPDATE device SET image = $1 WHERE id = $2")
-                        .bind(&bytes)
-                        .bind(id)
-                        .execute(pool.get_ref())
-                        .await
-                        .map_err(map_sqlx_error)?;
-
-                    result = true;
+                while let Some(chunk) = field.next().await {
+                    content.append(&mut chunk.map_err(map_multipart_error)?.to_vec());
                 }
+
+                let img = image::load_from_memory(&content)
+                    .map_err(map_image_error)?;
+                let img = img.resize_exact(600, 800, FilterType::Lanczos3);
+                let mut bytes = Vec::new();
+                img.write_to(&mut bytes, ImageOutputFormat::Jpeg(32))
+                    .map_err(map_image_error)?;
+
+                sqlx::query("UPDATE device SET image = $1 WHERE id = $2")
+                    .bind(&bytes)
+                    .bind(id)
+                    .execute(pool.get_ref())
+                    .await
+                    .map_err(map_sqlx_error)?;
+
+                result = true;
             }
         }
     }
@@ -265,6 +266,10 @@ async fn main() -> anyhow::Result<()> {
 
     HttpServer::new(move || {
         App::new()
+            .app_data(web::PayloadConfig::new(1_000_000 * 500))
+            .app_data(web::Bytes::configure(|cfg| {
+                cfg.limit(1_000_000 * 500) // 500 MB
+            }))
             .wrap(Logger::default())
             .data(pool.clone())
             .service(post_charge)

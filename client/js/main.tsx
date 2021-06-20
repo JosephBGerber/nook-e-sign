@@ -29,7 +29,7 @@ type Msg
 function reducer(model: Model, msg: Msg): Model {
     switch (msg.type) {
         case "SELECT_DEVICE":
-            if (model.devices) {
+            if (model.devices && model.selected_device == null) {
                 const selected = model.devices.find((device) => device.id == msg.id)
 
                 return {
@@ -40,13 +40,12 @@ function reducer(model: Model, msg: Msg): Model {
                 return model
             }
         case "DELETE_DEVICE":
-            if (model.devices) {
+            if (model.devices && model.selected_device == null) {
                 const devices = model.devices.filter((device) => device.id == msg.id)
 
                 return {
                     ...model,
                     devices: devices,
-                    selected_device: model.selected_device == msg.id ? null : model.selected_device
                 }
             } else {
                 return model
@@ -95,18 +94,20 @@ const App: React.FC<Model> = (initialModel: Model) => {
         }
     }
 
-    return <React.Fragment>
-        <table>
-            <tr>
-                <th>Id</th>
-                <th>Charge</th>
-                <th>Actions</th>
+    return <div className="mainContainer">
+        <div className="mainColumn">
+            <table>
+                <tr>
+                    <th>Id</th>
+                    <th>Charge</th>
+                    <th>Actions</th>
+                </tr>
+                <Devices dispatch={dispatch} devices={model.devices}/>
+            </table>
+            {imageView}
+        </div>
+    </div>;
 
-            </tr>
-            <Devices dispatch={dispatch} devices={model.devices}/>
-        </table>
-        {imageView}
-    </React.Fragment>;
 }
 
 
@@ -129,12 +130,11 @@ const Row: React.FC<{ dispatch: React.Dispatch<Msg>, id: number, charge: number 
         })
             .then(res => res.json())
             .then(
-                (result: number) => {
+                () => {
                     dispatch({type: "DELETE_DEVICE", id: id})
                 }
             )
     }
-
 
     return <tr>
         <td>{id}</td>
@@ -157,19 +157,22 @@ const ImageView: React.FC<{ dispatch: React.Dispatch<Msg>, id: number, image_has
         dispatch({type: "DESELECT_DEVICE"})
     }
 
-    return <div key={id}>
-        <button onClick={() => {
-            setAngle(angle - 90)
-        }}>
-            Counter-Clockwise
-        </button>
-        <button onClick={() => {
-            setAngle(angle + 90)
-        }}>
-            Clockwise
-        </button>
+    return <div className="imageView" key={id}>
+        <div className="imageView__buttons">
+            <button onClick={() => {
+                setAngle(angle - 90)
+            }}>
+                Counter-Clockwise
+            </button>
+            <button onClick={() => {
+                setAngle(angle + 90)
+            }}>
+                Clockwise
+            </button>
 
-        <button onClick={onClick}>Close</button>
+            <button onClick={onClick}>Close</button>
+        </div>
+
 
         <form>
             <input name="image" type="file"/>
@@ -179,8 +182,9 @@ const ImageView: React.FC<{ dispatch: React.Dispatch<Msg>, id: number, image_has
         </form>
 
         {/* We append the image hash so that our image will update if a new image has been uploaded */}
-        <img alt={"Image displayed on device " + id} src={`device/${id}/image?hash=${image_hash}`}
-             style={{rotate: `${angle}deg`}}/>
+        <img alt={"Image displayed on device " + id} className="imageView__image"
+             src={`device/${id}/image?hash=${image_hash}`} style={{rotate: `${angle}deg`}}/>
+
     </div>
 }
 
