@@ -1,8 +1,5 @@
 BUILD_TOOLS="$ANDROID_SDK_ROOT/build-tools/19.1.0"
 PLATFORM="$ANDROID_SDK_ROOT/platforms/android-7"
-JAVA_7_HOME="/opt/java*"
-
-GRADLE=/opt/gradle-6.5/bin/gradle
 
 ANDROID_ROOT="$WORKSPACE/android"
 APP_DIR="$ANDROID_ROOT/app"
@@ -11,11 +8,6 @@ JAVA_DIR="$SRC_DIR/java"
 BUILD_DIR="$APP_DIR/build"
 
 mkdir -p $BUILD_DIR
-
-#$GRADLE compileDebugSources
-#$BUILD_TOOLS/aapt package -m -J $BUILD_DIR -M $SRC_DIR/AndroidManifest.xml -S $SRC_DIR/res/ -I $PLATFORM/android.jar
-#$BUILD_TOOLS/dx --dex --output=$BUILD_DIR/classes.dex $BUILD_DIR/intermediates/javac/debug/classes
-
 cd $BUILD_DIR
 
 $BUILD_TOOLS/aapt package -m -J $JAVA_DIR -M $SRC_DIR/AndroidManifest.xml -S $SRC_DIR/res/ -I $PLATFORM/android.jar
@@ -23,7 +15,8 @@ $BUILD_TOOLS/aapt package -m -J $JAVA_DIR -M $SRC_DIR/AndroidManifest.xml -S $SR
 rm -r obj
 mkdir obj
 
-$JAVA_7_HOME/bin/javac -d obj -source 1.7 -target 1.7 -classpath "$JAVA_DIR" -bootclasspath $PLATFORM/android.jar $JAVA_DIR/com/github/josephbgerber/nookesign/*.java
+javac -d obj -source 1.7 -target 1.7 -classpath "$JAVA_DIR" -bootclasspath $PLATFORM/android.jar $JAVA_DIR/com/github/josephbgerber/nookesign/*.java
+javac -d obj -source 1.7 -target 1.7 -classpath "$JAVA_DIR" -bootclasspath $PLATFORM/android.jar $JAVA_DIR/mjson/*.java
 
 $BUILD_TOOLS/dx --dex --output=classes.dex obj
 

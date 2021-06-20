@@ -6,6 +6,7 @@ WORKSPACE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )/.."
 docker build --build-arg USER_ID=$(id -u) -t nook-e-sign .
 
 docker run --rm -it \
+	--privileged=true \
 	-v $WORKSPACE/:/home/developer/workspace:rw \
 	-v nook-e-sign-home:/home/developer:rw \
 	nook-e-sign

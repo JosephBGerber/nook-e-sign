@@ -1,0 +1,16 @@
+INSTALLER_ROOT="$WORKSPACE/installer"
+
+ANDROID_ROOT="$WORKSPACE/android"
+APP_DIR="$ANDROID_ROOT/app"
+SRC_DIR="$APP_DIR/src/main"
+JAVA_DIR="$SRC_DIR/java"
+BUILD_DIR="$APP_DIR/build"
+
+buildApk || { echo "Failed to build apk."; exit -1; }
+
+cd $INSTALLER_ROOT
+mkdir -p workdir || { echo "Failed to create a working directory."; exit -1; }
+cp NookSignBase.img NookSign.img
+sudo mount -o loop,rw,offset=16384 NookSign.img workdir || { echo "Failed to mount image."; exit -1; }
+sudo cp $BUILD_DIR/NookTouchSign.apk workdir/custom/files/com.github.josephbgerber.nookesign.apk
+sudo umount workdir
