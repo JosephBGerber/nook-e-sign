@@ -55,6 +55,9 @@ public class MainActivity extends Activity {
         final EditText editLibraryName = (EditText) findViewById(R.id.editLibraryName);
         final CheckBox disableAllInputCheckbox = (CheckBox) findViewById(R.id.disable_all_input);
 
+        // Temporarily disable "disable all input" option until it is implemented.
+        disableAllInputCheckbox.setVisibility(View.GONE);
+
         if (hostname != null && libraryName != null) {
             editHostname.setText(hostname);
             editLibraryName.setText(libraryName);
@@ -90,7 +93,7 @@ public class MainActivity extends Activity {
                 Json library;
 
                 try {
-                    HttpURLConnection connection = (HttpURLConnection) (new URL(url, "library/findByName/" + newLibraryName).openConnection());
+                    HttpURLConnection connection = (HttpURLConnection) (new URL(url, "android/library/findByName/" + newLibraryName).openConnection());
                     connection.setRequestProperty("Accept-Charset", "UTF-8");
 
                     int responseCode = connection.getResponseCode();
@@ -126,7 +129,7 @@ public class MainActivity extends Activity {
                     Json device;
 
                     try {
-                        HttpURLConnection connection = (HttpURLConnection) (new URL(url, "library/" + library.at("id").asInteger() + "/device").openConnection());
+                        HttpURLConnection connection = (HttpURLConnection) (new URL(url, "android/library/" + library.at("id").asInteger() + "/device").openConnection());
                         connection.setRequestMethod("POST");
                         connection.getResponseCode();
                         device = Json.read(readIntoString(connection.getInputStream()));
@@ -181,7 +184,7 @@ public class MainActivity extends Activity {
     }
 
     Handler handler = new Handler();
-    private final static int INTERVAL = 1000 * 60 * 5; // 5 minutes
+    private final static int INTERVAL = 1000 * 60 * 60; // 60 minutes
 
     void startUpdateTask() {
         updateTask.run();
@@ -225,7 +228,7 @@ public class MainActivity extends Activity {
 
             URL url = new URL("http://" + hostname);
 
-            HttpURLConnection connection = (HttpURLConnection) (new URL(url, "device/" + deviceId).openConnection());
+            HttpURLConnection connection = (HttpURLConnection) (new URL(url, "android/device/" + deviceId).openConnection());
             connection.setRequestProperty("Accept-Charset", "UTF-8");
             int responseCode = connection.getResponseCode();
 
@@ -273,7 +276,7 @@ public class MainActivity extends Activity {
 
                 ImageView imageView = (ImageView) findViewById(R.id.imageView);
 
-                connection = (HttpURLConnection) (new URL(url, "device/" + deviceId + "/image").openConnection());
+                connection = (HttpURLConnection) (new URL(url, "android/device/" + deviceId + "/image").openConnection());
                 Bitmap bitmap = BitmapFactory.decodeStream(connection.getInputStream());
                 connection.disconnect();
                 imageView.setImageBitmap(bitmap);
@@ -282,7 +285,7 @@ public class MainActivity extends Activity {
             if (!device.at("charge").isNull() && device.at("charge").asInteger() != charge) {
                 System.out.println("Updating charge.");
 
-                connection = (HttpURLConnection) (new URL(url, "device/" + deviceId + "/charge?charge=" + charge).openConnection());
+                connection = (HttpURLConnection) (new URL(url, "android/device/" + deviceId + "/charge?charge=" + charge).openConnection());
                 connection.setRequestMethod("POST");
                 connection.getResponseCode();
                 connection.disconnect();

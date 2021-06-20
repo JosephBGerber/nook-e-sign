@@ -201,7 +201,7 @@ pub fn setup() -> impl HttpServiceFactory {
         .app_data(web::Bytes::configure(|cfg| {
             cfg.limit(1_000_000 * 500) // 500 MB
         }))
-        .wrap(CookieSession::private(&[0; 32]))
+        .wrap(CookieSession::private(&[0; 32]).secure(false))
         .service(get_image)
         .service(post_image)
         .service(get_device)
