@@ -13,7 +13,7 @@ use image::imageops::FilterType;
 use serde::{Serialize, Deserialize};
 
 #[get("/device/{id}/image")]
-async fn get_image(pool: web::Data<PgPool>, web::Path(id): web::Path<i32>) -> Result<impl Responder, Error> {
+async fn get_image(pool: web::Data<PgPool>, web::Path(id): web::Path<i64>) -> Result<impl Responder, Error> {
     let device = sqlx::query!(
         "SELECT (image) FROM device WHERE id = $1",
         id
@@ -34,8 +34,8 @@ async fn get_image(pool: web::Data<PgPool>, web::Path(id): web::Path<i32>) -> Re
 }
 
 #[post("/device/{id}/image")]
-async fn post_image(pool: web::Data<PgPool>, session: Session, web::Path(id): web::Path<i32>, mut multipart: Multipart) -> Result<impl Responder, Error> {
-    let library_id = session.get::<i32>("library_id")
+async fn post_image(pool: web::Data<PgPool>, session: Session, web::Path(id): web::Path<i64>, mut multipart: Multipart) -> Result<impl Responder, Error> {
+    let library_id = session.get::<i64>("library_id")
         .map_err(map_session_error)?
         .ok_or(Error::Forbidden)?;
 
@@ -97,15 +97,15 @@ async fn post_image(pool: web::Data<PgPool>, session: Session, web::Path(id): we
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Device {
-    id: i32,
-    library_id: i32,
-    charge: i32,
+    id: i64,
+    library_id: i64,
+    charge: i64,
     image_hash: Option<String>,
 }
 
 #[get("/device/{id}")]
-async fn get_device(pool: web::Data<PgPool>, session: Session, web::Path(id): web::Path<i32>) -> Result<impl Responder, Error> {
-    let library_id = session.get::<i32>("library_id")
+async fn get_device(pool: web::Data<PgPool>, session: Session, web::Path(id): web::Path<i64>) -> Result<impl Responder, Error> {
+    let library_id = session.get::<i64>("library_id")
         .map_err(map_session_error)?
         .ok_or(Error::Forbidden)?;
 
@@ -127,8 +127,8 @@ async fn get_device(pool: web::Data<PgPool>, session: Session, web::Path(id): we
 }
 
 #[delete("/device/{id}")]
-async fn delete_device(pool: web::Data<PgPool>, session: Session, web::Path(id): web::Path<i32>) -> Result<impl Responder, Error> {
-    let library_id = session.get::<i32>("library_id")
+async fn delete_device(pool: web::Data<PgPool>, session: Session, web::Path(id): web::Path<i64>) -> Result<impl Responder, Error> {
+    let library_id = session.get::<i64>("library_id")
         .map_err(map_session_error)?
         .ok_or(Error::Forbidden)?;
 
@@ -144,7 +144,7 @@ async fn delete_device(pool: web::Data<PgPool>, session: Session, web::Path(id):
 
 #[get("/device")]
 async fn get_devices(pool: web::Data<PgPool>, session: Session) -> Result<impl Responder, Error> {
-    let library_id = session.get::<i32>("library_id")
+    let library_id = session.get::<i64>("library_id")
         .map_err(map_session_error)?
         .ok_or(Error::Forbidden)?;
 

@@ -22,5 +22,5 @@ lazy_static = "1.4.0"
 log = "0.4.0"
 openssl = { version = "0.10.34", features = ["vendored"] }
 serde = "1.0.123"
-sqlx = { version = "0.5", features = ["runtime-async-std-native-tls", "postgres"] }
+sqlx = { version = "0.6", features = ["runtime-async-std-native-tls", "postgres"] }
 thiserror = "1.0.24"

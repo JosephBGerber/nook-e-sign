@@ -7,33 +7,33 @@ use crate::error::*;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Id {
-    id: i32,
+    id: i64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Charge {
-    charge: i32,
+    charge: i64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Device {
-    id: i32,
-    library_id: i32,
-    charge: i32,
+    id: i64,
+    library_id: i64,
+    charge: i64,
     image_hash: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
 struct Library {
-    id: i32,
+    id: i64,
     name: String,
 }
 
 #[post("/device/{id}/charge")]
-async fn post_charge(pool: web::Data<PgPool>, web::Path(id): web::Path<i32>, device: web::Query<Charge>) -> Result<impl Responder, Error> {
+async fn post_charge(pool: web::Data<PgPool>, web::Path(id): web::Path<i64>, device: web::Query<Charge>) -> Result<impl Responder, Error> {
     let id = sqlx::query_scalar!(
         "SELECT id FROM device WHERE id = $1",
-        id
+        id as i64
     )
         .fetch_optional(pool.get_ref())
         .await
@@ -58,10 +58,10 @@ async fn post_charge(pool: web::Data<PgPool>, web::Path(id): web::Path<i32>, dev
 }
 
 #[get("/device/{id}/image")]
-async fn get_image(pool: web::Data<PgPool>, web::Path(id): web::Path<i32>) -> Result<impl Responder, Error> {
+async fn get_image(pool: web::Data<PgPool>, web::Path(id): web::Path<i64>) -> Result<impl Responder, Error> {
     let device = sqlx::query!(
         "SELECT image FROM device WHERE id = $1",
-        id
+        id as i64
     )
         .fetch_optional(pool.get_ref())
         .await
@@ -80,11 +80,11 @@ async fn get_image(pool: web::Data<PgPool>, web::Path(id): web::Path<i32>) -> Re
 
 
 #[get("/device/{id}")]
-async fn get_device(pool: web::Data<PgPool>, web::Path(id): web::Path<i32>) -> Result<impl Responder, Error> {
+async fn get_device(pool: web::Data<PgPool>, web::Path(id): web::Path<i64>) -> Result<impl Responder, Error> {
     let device = sqlx::query_as!(
         Device,
         "SELECT id, library_id, charge, md5(image) as image_hash FROM device WHERE id = $1",
-        id
+        id as i64
     )
         .fetch_optional(pool.get_ref())
         .await
@@ -113,11 +113,11 @@ async fn get_library_find_by_name(pool: web::Data<PgPool>, web::Path(name): web:
 }
 
 #[post("/library/{id}/device")]
-async fn post_library_device(pool: web::Data<PgPool>, web::Path(id): web::Path<i32>) -> Result<impl Responder, Error> {
+async fn post_library_device(pool: web::Data<PgPool>, web::Path(id): web::Path<i64>) -> Result<impl Responder, Error> {
     let library = sqlx::query_as!(
             Library,
             "SELECT id, name FROM library WHERE id = $1",
-            id
+            id as i64
         )
         .fetch_optional(pool.get_ref())
         .await
